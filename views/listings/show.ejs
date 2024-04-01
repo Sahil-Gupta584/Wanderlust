@@ -1,0 +1,190 @@
+<% layout("/layouts/boilerplate")%>
+
+    <style>
+        #map {
+            height: 300px;
+
+        }
+    </style>
+    <div class="row">
+        <div class="col-8 offset-2">
+
+            <h1>
+                <%=listing.title %>
+            </h1>
+
+            <div class="card listing-card">
+                <img src="<%=listing.image.url %>"
+                     alt="Card_image "
+                     class="card-img-top show-img">
+
+                <div class="card-body mt-2">
+                    <p class="card-text">Owned by <i>
+                            <%= listing.owner.username
+                                %>
+                        </i></p>
+                    <p class="card-text">
+                        <%=listing.description %>
+                    </p>
+                    <p class="card-text"> &#8377;<%= listing.price%>
+                    </p>
+                    <p class="card-text">
+                        <%=listing.location %>
+                    </p>
+                    <p class="card-text">
+                        <%=listing.country %>
+                    </p>
+
+                </div>
+            </div>
+            <% if(listing.owner.equals(currUser))
+               {
+               %>
+                <div class="btns mb-3">
+                    <a class="btn btn-dark edit col-1 me-2"
+                       href="/listings/<%= listing._id %>/edit"
+                       method="GET">
+                        Edit
+                    </a>
+
+                    <form action="/listings/<%= listing._id %>?_method=DELETE"
+                          method="POST">
+                        <button type="submit"
+                                class="btn btn-dark">Delete</button>
+                    </form>
+                </div>
+                <% }
+                   %>
+
+
+
+        </div>
+        <br>
+
+        <hr>
+        <div class="col-8 offset-2 mb-2">
+            <form action="/listings/<%= listing._id %>/reviews"
+                  method="POST"
+                  novalidate
+                  class="needs-validation">
+                <h3>Leave a Review</h3>
+                <label for="rating">Rating</label>
+                <fieldset class="starability-slot">
+                    <input type="radio"
+                           id="no-rate"
+                           class="input-no-rate"
+                           name="review[rating]"
+                           value="1"
+                           checked
+                           aria-label="No rating." />
+                    <input type="radio"
+                           id="first-rate1"
+                           name="review[rating]"
+                           value="1" />
+                    <label for="first-rate1"
+                           title="Terrible">1 star</label>
+                    <input type="radio"
+                           id="first-rate2"
+                           name="review[rating]"
+                           value="2" />
+                    <label for="first-rate2"
+                           title="Not good">2 stars</label>
+                    <input type="radio"
+                           id="first-rate3"
+                           name="review[rating]"
+                           value="3" />
+                    <label for="first-rate3"
+                           title="Average">3 stars</label>
+                    <input type="radio"
+                           id="first-rate4"
+                           name="review[rating]"
+                           value="4" />
+                    <label for="first-rate4"
+                           title="Very good">4 stars</label>
+                    <input type="radio"
+                           id="first-rate5"
+                           name="review[rating]"
+                           value="5" />
+                    <label for="first-rate5"
+                           title="Amazing">5 stars</label>
+                </fieldset>
+
+                <label for="comment">Comment</label>
+                <textarea name="review[comment]"
+                          id="comment"
+                          cols="50"
+                          rows="5"
+                          class="form-control"
+                          required></textarea>
+                <div class="invalid-feedback">Please add some comments for Review</div>
+                <br>
+                <button class="btn btn-outline-dark">Submit</button>
+            </form>
+        </div>
+
+        <hr>
+        <% if(listing.reviews.length > 0) {%>
+            <p><b>All Reviews</b></p>
+            <div class="row">
+                <% for(review of listing.reviews){ %>
+                    <div class="card col-5 ms-1 mb-2 review-card">
+                        <div class="card-body">
+                            <h5 class="card-title">@<%= review.author.username %> </h5>
+                            <p class="starability-result card-text"
+                               data-rating="<%= review.rating %>"></p>
+                            <p class="card-text">
+                                <%= review.comment
+                                    %>
+                            </p>
+                        </div>
+                        <form action="/listings/<%=listing._id %>/reviews/<%= review._id %>?_method=DELETE"
+                              method="post">
+                            <button class="btn btn-dark">Delete</button>
+                        </form>
+                    </div>
+                    <% } %>
+            </div>
+            
+       <% } else { %>
+        <p>Reviews are not available</p>
+   <% } %>
+
+   <h3>Where you would be</h3>
+            <div id="map"></div>
+
+
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+
+
+
+        if (typeof L !== 'undefined') {
+            let object = null;
+
+            var address = "<%= listing.location %>";
+            let url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + address;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+
+                    console.log(data);
+                    var map = L.map('map').setView([data[0].lat, data[0].lon], 13); // Initialize map
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { // Add tile layer
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    }).addTo(map);
+                    L.marker([data[0].lat, data[0].lon]).addTo(map);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+
+        } else {
+            console.error('Leaflet library not loaded.');
+        }
+
+
+    </script>
